@@ -5,7 +5,7 @@ just tested on ubuntu with python3.6.6
 
 
 ## Install
-install python3.6.6
+install python3.6.6 ffmpeg3.0.2
 
 git clone https://github.com/ghosthamlet/filter_scenes_by_faces.git
 
