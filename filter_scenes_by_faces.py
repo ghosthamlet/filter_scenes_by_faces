@@ -27,6 +27,7 @@ VIDEO_IMAGE_INTERVAL = '1'
 # MATCH_RATE = 0.45
 MATCH_RATE = 0.44
 MATCH_RATE_GEN_CLIP = 0.10
+DEBUG = 0
 
 
 def mkpdir(dir):
@@ -66,9 +67,11 @@ def flattern(xs):
     
 def get_persons_enc(persons):
     persons_enc = []
+    person_enc_idx = {}
+    idx = 0
     
-    for filename in persons:
-        image = face.load_image_file(filename)
+    for filepath in persons:
+        image = face.load_image_file(filepath)
         
         person_encs = []
         for upsample in UPSAMPLES:
@@ -77,16 +80,18 @@ def get_persons_enc(persons):
 
             if n_face > 1:
                 raise Exception('File %s has %s person, please use one person image or cut other person on this image' 
-                        % (filename, n_face))
+                        % (filepath, n_face))
             elif n_face == 1:
+                person_enc_idx[idx] = filepath
                 person_encs.append(face.face_encodings(image, known_face_locations=faces_loc)[0])
+                idx += 1
             
         if len(person_encs) == 0:
-            raise Exception('File %s no person' % filename)
+            raise Exception('File %s no person' % filepath)
          
         persons_enc.extend(person_encs)
            
-    return persons_enc
+    return persons_enc, person_enc_idx
     
     
 def create_images(filename):
@@ -98,6 +103,17 @@ def create_images(filename):
 def exists(pred, xs):
     return len(list(filter(pred, xs))) > 0
 
+def min_pos(xs):
+    m = 1
+    pos = 0
+
+    for i, v in enumerate(xs):
+        if v < m:
+            m = v
+            pos = i
+
+    return m, pos
+
 
 def match_persons_time():
     matched_times = []
@@ -106,7 +122,7 @@ def match_persons_time():
     if len(persons) == 0:
         raise Exception('Persons image format have to be jpg/png')
 
-    persons_enc = get_persons_enc(persons)
+    persons_enc, person_enc_idx = get_persons_enc(persons)
     video_images = list(get_files(DIR_VIDEO_IMAGES, exts=['.jpg']))
 
     if len(video_images) == 0:
@@ -115,9 +131,9 @@ def match_persons_time():
     # sort by time in video 
     video_images.sort()
    
-    for i, filename in enumerate(video_images):
+    for i, filepath in enumerate(video_images):
         time = i+1
-        image = face.load_image_file(filename)
+        image = face.load_image_file(filepath)
         faces_loc = flattern([face.face_locations(image, number_of_times_to_upsample=u, model=MODEL)
                              for u in UPSAMPLES])
         
@@ -137,7 +153,11 @@ def match_persons_time():
                 
                 # TODO: maybe use ffmpeg api to check if frames nearby have many actions, can't get face, so we should enlarge time nearby
                 matched_times.append((time-TIME_NEARBY, time+TIME_NEARBY))
-                print('Matched person in %ss %s %s' % (time, filename, min(dists)))
+
+                min_dist, dist_idx = min_pos(dists)
+                print('Matched person in %ss %s, dist: %s, person: %s' 
+                        % (time, filepath, min_dist, person_enc_idx[dist_idx]))
+
                 break
             
     return matched_times
@@ -168,7 +188,7 @@ def merge_persons_time(matched_times):
         
     
 def create_video_cut_times(filename):
-    if len(os.listdir(DIR_VIDEO_IMAGES)) < 10:
+    if not DEBUG and len(os.listdir(DIR_VIDEO_IMAGES)) < 10:
         print('Creating images...')
         create_images(filename)
     
@@ -225,7 +245,9 @@ def filter_scenes_by_faces():
  
     for filepath in get_files(DIR_VIDEOS):
         print('Processing %s...' % filepath)
-        empty_dir(DIR_VIDEO_IMAGES)
+
+        if not DEBUG:
+            empty_dir(DIR_VIDEO_IMAGES)
         
         filename = os.path.basename(filepath)
 
