@@ -3,6 +3,8 @@
 
 
 ## Install
+install python3.6.6
+
 git clone https://github.com/ghosthamlet/filter_scenes_by_faces.git
 
 cd filter_scenes_by_faces/
