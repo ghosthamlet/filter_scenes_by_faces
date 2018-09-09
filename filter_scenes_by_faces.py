@@ -50,9 +50,10 @@ def empty_dir(dir):
        os.remove(f) 
     
 
-def get_files(dir):
+def get_files(dir, exts=None):
     return (os.path.join(dir, f) for f in os.listdir(dir) 
-             if os.path.isfile(os.path.join(dir, f)))
+            if os.path.isfile(os.path.join(dir, f))
+            and (not exts or os.path.splitext(f)[1] in exts))
 
 
 def flattern(xs):
@@ -75,15 +76,13 @@ def get_persons_enc(persons):
             n_face = len(faces_loc)
 
             if n_face > 1:
-                print('File %s has %s person, please use one person image or cut other person on this image' 
-                      % (filename, n_face))
-                exit()
+                raise Exception('File %s has %s person, please use one person image or cut other person on this image' 
+                        % (filename, n_face))
             elif n_face == 1:
                 person_encs.append(face.face_encodings(image, known_face_locations=faces_loc)[0])
             
         if len(person_encs) == 0:
-            print('File %s no person' % filename)
-            exit()
+            raise Exception('File %s no person' % filename)
          
         persons_enc.extend(person_encs)
            
@@ -102,8 +101,17 @@ def exists(pred, xs):
 
 def match_persons_time():
     matched_times = []
-    persons_enc = get_persons_enc(get_files(DIR_MATCH_PERSONS))
-    video_images = list(get_files(DIR_VIDEO_IMAGES))
+    persons = get_files(DIR_MATCH_PERSONS, exts=['jpg', 'jpeg', 'png'])
+
+    if len(persons) == 0:
+        raise Exception('Persons image format have to be jpg/png')
+
+    persons_enc = get_persons_enc(persons)
+    video_images = list(get_files(DIR_VIDEO_IMAGES, exts=['jpg']))
+
+    if len(video_images) == 0:
+        raise Exception('Video image format have to be jpg')
+
     # sort by time in video 
     video_images.sort()
    
@@ -166,8 +174,10 @@ def create_video_cut_times(filename):
     
     print('Matching persons...')
     matched_times = match_persons_time()
+
     print('Merge times...')
     merged_times = merge_persons_time(matched_times)
+
     for i in range(20):
         merged_times = merge_persons_time(merged_times)
     
@@ -182,8 +192,7 @@ def extract_video(filename):
         times = json.loads(f.read())
         
     if len(times) == 0:
-        print('File %s no times' % filename)
-        exit()
+        raise Exception('File %s no times' % filename)
         
     print(times)
     
@@ -203,8 +212,7 @@ def extract_video(filename):
         
 def filter_scenes_by_faces():
     if not os.path.exists(DIR_MATCH_PERSONS):
-        print('Person path and files %s did not exists' % DIR_MATCH_PERSONS)
-        exit()
+        raise Exception('Person path and files %s did not exists' % DIR_MATCH_PERSONS)
 
     if not os.path.exists(DIR_VIDEO_IMAGES):
         mkpdir(DIR_VIDEO_IMAGES)
