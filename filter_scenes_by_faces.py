@@ -101,13 +101,13 @@ def exists(pred, xs):
 
 def match_persons_time():
     matched_times = []
-    persons = list(get_files(DIR_MATCH_PERSONS, exts=['jpg', 'jpeg', 'png']))
+    persons = list(get_files(DIR_MATCH_PERSONS, exts=['.jpg', '.jpeg', '.png']))
 
     if len(persons) == 0:
         raise Exception('Persons image format have to be jpg/png')
 
     persons_enc = get_persons_enc(persons)
-    video_images = list(get_files(DIR_VIDEO_IMAGES, exts=['jpg']))
+    video_images = list(get_files(DIR_VIDEO_IMAGES, exts=['.jpg']))
 
     if len(video_images) == 0:
         raise Exception('Video image format have to be jpg')
@@ -228,6 +228,10 @@ def filter_scenes_by_faces():
         empty_dir(DIR_VIDEO_IMAGES)
         
         filename = os.path.basename(filepath)
+
+        if filename == '.gitkeep': 
+            continue
+
         create_video_cut_times(filename)
         extract_video(filename)
         
