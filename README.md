@@ -1,6 +1,8 @@
 
 # Filter video scenes by faces
 
+just tested on ubuntu with python3.6.6
+
 
 ## Install
 install python3.6.6
