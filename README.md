@@ -14,7 +14,7 @@ cd filter_scenes_by_faces/
 pip install -r requirements.txt
 
 
-## use
+## Use
 put videos in data/videos/
 
 put person photos in data/persons/
