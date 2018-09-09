@@ -130,6 +130,8 @@ def match_persons_time():
 
     # sort by time in video 
     video_images.sort()
+
+    idx = len(person_enc_idx)
    
     for i, filepath in enumerate(video_images):
         time = i+1
@@ -149,7 +151,9 @@ def match_persons_time():
             if exists(lambda x: x<MATCH_RATE, dists):
                 # auto gen targets from predict
                 if len(persons_enc) < 300 and exists(lambda x: x<MATCH_RATE - MATCH_RATE_GEN_CLIP, dists):
+                    person_enc_idx[idx] = filepath
                     persons_enc.append(face_enc)
+                    idx += 1
                 
                 # TODO: maybe use ffmpeg api to check if frames nearby have many actions, can't get face, so we should enlarge time nearby
                 matched_times.append((time-TIME_NEARBY, time+TIME_NEARBY))
