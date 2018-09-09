@@ -101,7 +101,7 @@ def exists(pred, xs):
 
 def match_persons_time():
     matched_times = []
-    persons = get_files(DIR_MATCH_PERSONS, exts=['jpg', 'jpeg', 'png'])
+    persons = list(get_files(DIR_MATCH_PERSONS, exts=['jpg', 'jpeg', 'png']))
 
     if len(persons) == 0:
         raise Exception('Persons image format have to be jpg/png')
