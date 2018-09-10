@@ -18,7 +18,8 @@ DIR_VIDEOS_OUTPUT = 'data/output/'
  
 FFMPEG = 'ffmpeg'
 MODEL = 'cnn'
-UPSAMPLES = [0, 1]
+UPSAMPLES_VIDEO_IMAGE = [0, 1]
+UPSAMPLES_PERSON = [0]
 TIME_NEARBY = 3
 MERGE_TIME_INTERVAL = 4
 # VIDEO_IMAGE_INTERVAL = '1/60'
@@ -74,7 +75,7 @@ def get_persons_enc(persons):
         image = face.load_image_file(filepath)
         
         person_encs = []
-        for upsample in UPSAMPLES:
+        for upsample in UPSAMPLES_PERSON:
             faces_loc = face.face_locations(image, number_of_times_to_upsample=upsample, model=MODEL)
             n_face = len(faces_loc)
 
@@ -137,7 +138,7 @@ def match_persons_time():
         time = i+1
         image = face.load_image_file(filepath)
         faces_loc = flattern([face.face_locations(image, number_of_times_to_upsample=u, model=MODEL)
-                             for u in UPSAMPLES])
+                             for u in UPSAMPLES_VIDEO_IMAGE])
         
         if len(faces_loc) == 0:
             # print('Time %ss no person' % time)
@@ -248,15 +249,15 @@ def filter_scenes_by_faces():
         mkpdir(DIR_VIDEOS_OUTPUT)
  
     for filepath in get_files(DIR_VIDEOS):
-        print('Processing %s...' % filepath)
-
-        if not DEBUG:
-            empty_dir(DIR_VIDEO_IMAGES)
-        
         filename = os.path.basename(filepath)
 
         if filename == '.gitkeep': 
             continue
+
+        print('Processing %s...' % filepath)
+
+        if not DEBUG:
+            empty_dir(DIR_VIDEO_IMAGES)
 
         create_video_cut_times(filename)
         extract_video(filename)
@@ -264,3 +265,4 @@ def filter_scenes_by_faces():
 
 if __name__ == '__main__':
     filter_scenes_by_faces()
+
